@@ -39,7 +39,7 @@ titles = {
 directory = 'datos_solar'
 
 for filename in os.listdir(directory):
-    if filename.endswith('.csv'):
+    if filename.endswith('fil.csv'):
         data = np.loadtxt(directory+'/'+filename, delimiter=',')
         
         # Choose our variables: kt* (kC), cloudness index (nub),
@@ -49,11 +49,6 @@ for filename in os.listdir(directory):
         var = data[:, titles['varkC']]
         GHIme = data[:, titles['GHIme']]
         GHIcs = data[:, titles['GHIcs']]
-        
-        # This could be more memory efficient, as there is redundancy. Here m
-        # is the time series data and datos represents all of the data
-        m = np.array([x, nub, var]).transpose()  # create matrix [n_obs x 3]
+        # Save
         datos = np.array([GHIme, GHIcs, x, nub, var]).transpose()
-        
-        np.save('vectors/m_{}'.format(filename[:-4]), m)
         np.save('vectors/data_{}'.format(filename[:-4]), datos)
