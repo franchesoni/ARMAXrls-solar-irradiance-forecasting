@@ -11,6 +11,9 @@ import numpy as np
 import os
 
 '''In this script we take the data into numpy arrays for further use'''
+
+'''Assume that the data has 19 columns with the variables defined below
+   and the data is already filtered'''
 # create titles
 titles = {
     'Ano':0,

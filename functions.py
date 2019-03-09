@@ -16,24 +16,29 @@ from functools import partial
 from multiprocessing import Pool
 from time import time
 
-def evaluate(filename, orders=[(5, 0)], n=int(50000), LT=24):
+def evaluate(filename, orders=[(5, 0)], n=int(50000), LT=24, csv=False):
     start = time()
     
     EX = np.zeros(n)  # no exogenous input
     EX = np.expand_dims(EX, axis=0)  # reshape to avoid errors
     data = np.load('vectors/'+filename)  # load data
+    
+    print(filename[5:7])
     print('mean = ', np.mean(data[:, 0], axis=0))
     print('anual solar irradiance =',
           np.sum(600*data[:, 0])
           / (2*3600*1000*1000))  # 600s = 10 min. 2 years. 3.6E9 to MWh/m2
+    
     m = data[0:n, 2::]  # cut the data until n
     data = data[0:n, :]  # cut the data until n
-    print('...')
+#    print('...')
+    if csv:
+        errors_list = []
     orders_list = []
     RMSDs_list = []
     predictions_list = []
     for i, order in enumerate(orders):  # for each order
-        print('started ', order)
+#        print('started ', order)
         orders_list.append(order)  # add title to output
         p, q = order[0], order[1]  # get number of lags
 
@@ -49,37 +54,43 @@ def evaluate(filename, orders=[(5, 0)], n=int(50000), LT=24):
         for lt in range(LT):
             predictions[lt] = (predictions[lt].T * data[:, 1]).T  # kt* x GHIcs
             errors.append((data[:, 0] - predictions[lt].T).T)
-        start_index = 400  # cut series, ignore transient
+        start_index = 400  # cut series, ignore unstable transient
         errors = np.array([error[start_index::] for error in errors])
         RMSDs = np.sqrt(np.mean(errors ** 2, axis=1)) \
             / np.mean(data[:, 0], axis=0)  # get relative RMSD
         
         predictions_list.append(predictions)
-#        errors_list.append(errors)
         RMSDs_list.append(RMSDs)
-    
-#    errors_per = []
-#    for lt in range(LT):
-#        errors_per.append(data[lt+1::, 0]
-#                          - data[0:-lt-1, 2] * data[lt+1::, 1])
-#    errors_per = np.array([error[0:m.shape[0]-LT] for error in errors_per])  # -1 because diff, +1 because python
-#    RMSDs_per = np.sqrt(np.mean(errors_per**2, axis=1)) \
-#                    / np.mean(data[:, 0], axis=0)
+        
+        if csv:
+            errors_list.append(errors)
     
     # Save
-#    with open('results/{}_errors_per'. format(filename[5:7]), 'wb') as f:
-#        pickle.dump(errors_per, f, pickle.HIGHEST_PROTOCOL)
-#    with open('results/{}_RMSDs_per'. format(filename[5:7]), 'wb') as f:
-#        pickle.dump(RMSDs_per, f, pickle.HIGHEST_PROTOCOL)
     with open('results/{}_predictions'. format(filename[5:7]), 'wb') as f:
         pickle.dump(predictions_list, f, pickle.HIGHEST_PROTOCOL)
     with open('results/{}_orders'. format(filename[5:7]), 'wb') as f:
         pickle.dump(orders_list, f, pickle.HIGHEST_PROTOCOL)
-#    with open('results/{}_errors'. format(filename[5:7]), 'wb') as f:
-#        pickle.dump(errors_list, f, pickle.HIGHEST_PROTOCOL)
     with open('results/{}_RMSDs'. format(filename[5:7]), 'wb') as f:
         pickle.dump(RMSDs_list, f, pickle.HIGHEST_PROTOCOL)
     
+    if csv:
+        try:
+            os.makedirs('csv_files/'+filename[5:7])
+        except:
+            print('directory already existent')
+        errors_per = []
+        for lt in range(LT):
+            errors_per.append(data[lt+1::, 0]
+                              - data[0:-lt-1, 2] * data[lt+1::, 1])
+        errors_per = np.array([error[0:m.shape[0]-LT] for error in errors_per])  # -1 because diff, +1 because python
+
+        for order_index, error_in_order in enumerate(errors_list):
+            np.savetxt('csv_files/'+filename[5:7]+
+                       '/error_for_order_{}.csv'.format(orders[order_index]),
+                                         error_in_order.squeeze().T,
+                                         delimiter=',', fmt='%.2f')
+        np.savetxt('csv_files/'+filename[5:7]+'/error_for_persistence.csv',
+                   errors_per, delimiter=',', fmt='%.2f')
     # Finish
     end = time()
     print('COMPLETED')
@@ -87,7 +98,16 @@ def evaluate(filename, orders=[(5, 0)], n=int(50000), LT=24):
     print()
     return None
 
-def get_results_for_order(filename, order, n=int(50000), LT=24):
+#    with open('results/{}_errors_per'. format(filename[5:7]), 'wb') as f:
+#        pickle.dump(errors_per, f, pickle.HIGHEST_PROTOCOL)
+#    with open('results/{}_RMSDs_per'. format(filename[5:7]), 'wb') as f:
+#        pickle.dump(RMSDs_per, f, pickle.HIGHEST_PROTOCOL)
+#    with open('results/{}_errors'. format(filename[5:7]), 'wb') as f:
+#        pickle.dump(errors_list, f, pickle.HIGHEST_PROTOCOL)
+#        RMSDs_per = np.sqrt(np.mean(errors_per**2, axis=1)) \
+#                        / np.mean(data[:, 0], axis=0)
+    
+def get_results_for_order(filename, order, n=int(50000), LT=24, csv=False):
     '''Calculate for the different models MBE, RMSD, of both ARMA forecasts and
     persistence. Calculate FSkill of ARMA forecasts'''
     def build_EX(ex):
@@ -155,6 +175,20 @@ def get_results_for_order(filename, order, n=int(50000), LT=24):
     MBDs_per = np.mean(errors_per, axis=1) / np.mean(data[:, 0], axis=0)
     Fskills_list = [1 - RMSDs.squeeze() / RMSDs_per for RMSDs in RMSDs_list]
     
+    
+    if csv:
+        try:
+            os.makedirs('csv_files/'+filename[5:7])
+        except:
+            print('directory already existent')
+        models = ['PGM', 'PGM_S', 'PGM_V', 'PGM_SV']
+        for model_index, error_in_model in enumerate(errors_list):
+            np.savetxt('csv_files/'+filename[5:7]+
+                       '/error_for_model_{}.csv'.format(models[model_index]),
+                                         error_in_model.squeeze().T,
+                                         delimiter=',', fmt='%.2f')
+#        np.savetxt('csv_files/'+filename[5:7]+'/error_for_persistence.csv',
+#                   errors_per, delimiter=',', fmt='%.2f')
     # Finish
     end = time()
     print('COMPLETED')

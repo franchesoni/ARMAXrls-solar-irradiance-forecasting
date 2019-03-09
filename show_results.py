@@ -12,11 +12,12 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 from matplotlib import cm
+from matplotlib import rc, font_manager
 from functions import amp, stridency
 #%%
 res_dir = 'results'
 filenames = os.listdir(res_dir)
-acronyms = set([filename[0:2] for filename in filenames])
+acronyms = set([filename[0:2] for filename in filenames if filename[-3::]!='png'])
 
 orders = []  # places x 43
 predictions = []  # places x 43 x 24 x 44120
@@ -50,22 +51,32 @@ RMSDs_ranked_avg = np.mean(RMSDs_ranked, axis=0)
 # PLOTEAR PARCIAL A TIEMPOS lts
 lts = [0, 8, 23]
 
-
-
+sizeOfFont = 10
+fontProperties = {'weight' : 'normal', 'size' : sizeOfFont}
+colors = [(0.5, 0.5, 0, 0.5), (0, 0.5, 0, 0.5),
+          (0.5, 0, 0, 0.5), (0, 0, 0, 0.5)]
 
 plt.close('all')
-plt.figure()
-ax = plt.gca()
-plt.title('Average %RMSD')
-plt.xlabel('Lead Time (10 minutes time step)')
-plt.ylabel('Relative RMS deviation (%)')
+plt.rcParams.update({'font.size': 15})
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+#plt.title('Average %RMSD')
+a = plt.gca()
 for i, order in zip(range(len(orders)-1, -1, -1), orders[::-1]):
     for i, order in enumerate(orders):
-        plt.plot(RMSDs[:, i], color=(1 - order[1] / 3, order[1] / 3, np.sqrt(order[1]/3), 0.5), label='MA order = {}'.format(order[1]))
+        ax.plot(RMSDs[:, i], color=colors[order[1]], label='MA order = {}'.format(order[1]))
 display = (1, 15, 29, 42)
 handles, labels = ax.get_legend_handles_labels()
 ax.legend([handle for i,handle in enumerate(handles) if i in display],
       [label for i,label in enumerate(labels) if i in display], loc = 'best')
+#ax.set_ylim(0.15, 0.45)
+ax.set_ylabel('Relative RMS deviation (%)')
+#ax.set_xlim(0, 3)
+ax.set_xlabel('Lead Time (10 minutes time step)')
+ax.set_xticks([0, 5, 10, 15, 20])
+ax.set_yticks([0.20, 0.25, 0.30, 0.35, 0.40]) 
+a.set_xticklabels(a.get_xticks(), fontProperties)
+a.set_yticklabels(a.get_yticks(), fontProperties)
 
 
 plt.rcParams.update({'font.size': 15})

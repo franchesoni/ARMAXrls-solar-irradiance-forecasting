@@ -12,7 +12,7 @@ import gc
 import matplotlib.pyplot as plt
 #%%
 order = [5, 0]
-filenames = os.listdir('vectors')
+filenames = [file for file in os.listdir('vectors') if file[-3::]!='png']
 MBDs_per_loc = []  # one element per location
 RMSDs_per_loc = []
 MBDs_list_loc = []
@@ -21,12 +21,14 @@ Fskills_list_loc = []
 for filename in filenames:
     MBDs_per, RMSDs_per, \
     MBDs_list, RMSDs_list, \
-    Fskills_list = get_results_for_order(filename, order)
+    Fskills_list = get_results_for_order(filename, order, csv=True)
+    
     MBDs_per_loc.append(MBDs_per)
     RMSDs_per_loc.append(RMSDs_per)
     MBDs_list_loc.append(MBDs_list)
     RMSDs_list_loc.append(RMSDs_list)
     Fskills_list_loc.append(Fskills_list)
+  
 #%%
 gc.collect()
 MBDs_per_loc = np.array(MBDs_per_loc)  # 6 x 24
