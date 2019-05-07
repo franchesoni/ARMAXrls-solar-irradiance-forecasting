@@ -56,42 +56,42 @@ print(np.round(np.mean(Fskills_list_loc[:, 3, :] * 100, axis=0), 1)[[0, 1, 2, 3,
 # PLOT AVG
 plt.close('all')
 plt.figure()
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(RMSDs_per_loc, axis=0),
          linewidth=5, color=(0.1, 0.1, 0.1), label='Persistence')
 
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(RMSDs_list_loc, axis=0)[0],
          '--', linewidth=4, color=(0.5, 0.5, 0), label='PGM')
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(RMSDs_list_loc, axis=0)[1],
          '--', linewidth=4, color=(0, 0.5, 0), label='PGM - S')
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(RMSDs_list_loc, axis=0)[2],
          '-o', linewidth=1, color=(0.5, 0, 0), label='PGM - V')
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(RMSDs_list_loc, axis=0)[3],
          '-o', linewidth=1, color=(0, 0, 0), label='PGM - SV')
 plt.ylim(15, 50)
 plt.ylabel('Relative RMS deviation (%)')
-plt.xlabel('Lead Time (10 minutes time step)')
+plt.xlabel('Lead Time (min)')
 plt.legend(loc=2)
 #%%
 plt.close(2)
 plt.figure()
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(Fskills_list_loc, axis=0)[0],
          '--', linewidth=4, color=(0.5, 0.5, 0), label='PGM')
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(Fskills_list_loc, axis=0)[1],
          '--', linewidth=4, color=(0, 0.5, 0), label='PGM - S')
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(Fskills_list_loc, axis=0)[2],
          '-o', linewidth=1, color=(0.5, 0, 0), label='PGM - V')
-plt.plot(np.arange(1, 25),
+plt.plot(np.arange(1, 25)*10,
          100 * np.mean(Fskills_list_loc, axis=0)[3],
          '-o', linewidth=1, color=(0, 0, 0), label='PGM - SV')
 #plt.ylim(15, 50)
 plt.ylabel('Forecasting Skill (%)')
-plt.xlabel('Lead Time (10 minutes time step)')
+plt.xlabel('Lead Time (min)')
 plt.legend(loc=1)
